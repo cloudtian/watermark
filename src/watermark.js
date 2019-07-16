@@ -27,7 +27,7 @@ function throttle (fn, time = 200) {
 }
 
 function between (val, min, max) {
-    return val > min && val < max;
+    return (val >= min) && (val <= max);
 }
 
 class watermark {
@@ -36,8 +36,21 @@ class watermark {
         this.options = Object.assign({}, DEFAULT_CONFIG, options);
 
         this.mark = document.createElement('div');
+        this.updateMarkStyle();
         this.generateMark();
         this.resizeEvent();
+    }
+
+    updateMarkStyle () {
+        this.mark.style.overflow = 'hidden';
+        this.mark.style.position = 'absolute';
+        this.mark.style.top = 0;
+        this.mark.style.left = 0;
+    }
+
+    updateMarkRect () {
+        this.mark.style.width = `${this.pageWidth}px`;
+        this.mark.style.height = `${this.pageHeight}px`;
     }
 
     resizeEvent () {
@@ -57,26 +70,25 @@ class watermark {
     // 列数为0或设置过大超过最大宽度，则重新计算水印列数和x轴间距
     computeCol () {
         let {cols, x, width, xSpace} = this.options;
-        let newCols, newXSpace;
+        let newCols;
 
-        let markWidth = x * 2 + width * cols + xSpace * (cols - 1);
-        let remainWidth = this.pageWidth - markWidth;
+        let markWidth = width * cols + xSpace * (cols - 1);
+        let remainWidth = this.pageWidth - x - markWidth;
 
         if (cols && between(remainWidth, 0, width + xSpace)) {
             return;
         }
 
-        newCols = parseInt((this.pageWidth - (x * 2) + xSpace) / (width + xSpace));
-        newXSpace = parseInt((this.pageWidth - (x * 2) - width * newCols) / (newCols - 1));
+        newCols = parseInt((this.pageWidth - x + xSpace) / (width + xSpace)) + 1;
+        
 
         this.options.cols = newCols;
-        this.options.xSpace = newXSpace;
     }
 
     // 行数为0或设置过大超过最大高度，则重新计算水印行数和y轴间距
     computeRow () {
         let {rows, y, height, ySpace} = this.options;
-        let newRows, newYSpace;
+        let newRows;
 
         let markHeight = y * 2 + height * rows + ySpace * (rows - 1);
         let remainHeight = this.pageHeight - markHeight;
@@ -86,13 +98,12 @@ class watermark {
         }
 
         newRows = parseInt((this.pageHeight - (y * 2) + ySpace) / (height + ySpace));
-        newYSpace = parseInt((this.pageHeight - (y * 2) - height * newRows) / (newRows - 1));
 
         this.options.rows = newRows;
-        this.options.ySpace = newYSpace;
     }
 
     generateMark () {
+        this.updateMarkRect();
         this.computeCol();
         this.computeRow();
 
