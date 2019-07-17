@@ -54,9 +54,13 @@ class watermark {
     }
 
     resizeEvent () {
-        window.onresize = throttle(() => {
+        const throttleMark = throttle(() => {
             this.generateMark();
         });
+        window.onresize = () => {
+            this.updateMarkRect();
+            throttleMark();
+        }
     }
 
     get pageWidth () {
